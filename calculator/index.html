@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>電卓 / Calculator</title>
+<style>
+  :root {
+    --bg: #eef1f6;
+    --panel: #ffffff;
+    --text: #17202e;
+    --muted: #7b8798;
+    --key: #f3f5f9;
+    --key-text: #17202e;
+    --key-hover: #e7ebf2;
+    --op: #e8eefc;
+    --op-text: #2f6bdd;
+    --fn: #e6e9ef;
+    --fn-text: #4a5567;
+    --accent: #2f6bdd;
+    --accent-text: #ffffff;
+    --danger: #d64545;
+    --border: rgba(23, 32, 46, 0.08);
+    --shadow: 0 18px 40px rgba(23, 32, 46, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161d;
+      --panel: #1b212b;
+      --text: #eef2f8;
+      --muted: #8d99ac;
+      --key: #242c38;
+      --key-text: #eef2f8;
+      --key-hover: #2d3747;
+      --op: #24344f;
+      --op-text: #7fa8ff;
+      --fn: #2a323f;
+      --fn-text: #c3ccda;
+      --accent: #3d7bf0;
+      --accent-text: #ffffff;
+      --danger: #ff7a7a;
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #12161d;
+    --panel: #1b212b;
+    --text: #eef2f8;
+    --muted: #8d99ac;
+    --key: #242c38;
+    --key-text: #eef2f8;
+    --key-hover: #2d3747;
+    --op: #24344f;
+    --op-text: #7fa8ff;
+    --fn: #2a323f;
+    --fn-text: #c3ccda;
+    --accent: #3d7bf0;
+    --accent-text: #ffffff;
+    --danger: #ff7a7a;
+    --border: rgba(255, 255, 255, 0.08);
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Sans", "Noto Sans JP", -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 24rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.125rem 0.375rem;
+  }
+
+  .brand {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .icon-btn {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 999px;
+    height: 1.875rem;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-btn:hover { background: var(--key-hover); color: var(--text); }
+  .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .icon-btn[aria-pressed="true"] { background: var(--op); color: var(--op-text); border-color: transparent; }
+
+  .display {
+    background: var(--key);
+    border-radius: 1rem;
+    padding: 1rem 1.125rem;
+    min-height: 6.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.375rem;
+    overflow: hidden;
+  }
+
+  .expr {
+    font-size: 1.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: right;
+    word-break: break-all;
+    min-height: 2.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .expr:empty::before { content: "0"; color: var(--muted); }
+
+  .preview {
+    font-size: 1rem;
+    text-align: right;
+    color: var(--muted);
+    min-height: 1.25rem;
+    word-break: break-all;
+    font-variant-numeric: tabular-nums;
+  }
+  .preview.is-result { color: var(--accent); font-weight: 700; font-size: 1.125rem; }
+  .preview.is-error { color: var(--danger); font-weight: 600; }
+
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .key {
+    appearance: none;
+    border: none;
+    border-radius: 0.875rem;
+    background: var(--key);
+    color: var(--key-text);
+    font-size: 1.375rem;
+    font-weight: 500;
+    aspect-ratio: 1 / 1;
+    cursor: pointer;
+    transition: background 0.12s ease, transform 0.06s ease;
+    font-family: inherit;
+  }
+  .key:hover { background: var(--key-hover); }
+  .key:active, .key.is-pressed { transform: scale(0.95); }
+  .key:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .key.fn { background: var(--fn); color: var(--fn-text); font-size: 1.125rem; }
+  .key.fn:hover { filter: brightness(0.96); }
+  .key.op { background: var(--op); color: var(--op-text); font-weight: 600; }
+  .key.clear { color: var(--danger); font-weight: 700; }
+  .key.equals {
+    grid-column: 1 / -1;
+    aspect-ratio: auto;
+    height: 3.5rem;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-weight: 700;
+  }
+  .key.equals:hover { filter: brightness(1.06); }
+
+  .history {
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+  .history.is-open { display: flex; }
+
+  .history-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .link-btn {
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.125rem 0.25rem;
+    font-family: inherit;
+  }
+  .link-btn:hover { color: var(--danger); }
+
+  .history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 9rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .history-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    text-align: right;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+  }
+  .history-item:hover { background: var(--key); }
+  .history-item .h-expr { display: block; font-size: 0.75rem; color: var(--muted); }
+  .history-item .h-result { display: block; font-size: 1rem; font-weight: 600; }
+
+  .empty { font-size: 0.75rem; color: var(--muted); text-align: center; padding: 0.5rem; }
+
+  .hint {
+    font-size: 0.6875rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 22rem) {
+    .key { font-size: 1.125rem; }
+    .expr { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="topbar">
+    <span class="brand">電卓</span>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="history-toggle" type="button" aria-pressed="false" aria-controls="history">履歴</button>
+      <button class="icon-btn" id="theme-toggle" type="button" title="テーマ切り替え" aria-label="テーマを切り替え">◐</button>
+    </div>
+  </div>
+
+  <div class="display">
+    <div class="expr" id="expr" aria-live="polite" aria-label="入力中の式"></div>
+    <div class="preview" id="preview" aria-live="polite" aria-label="計算結果"></div>
+  </div>
+
+  <div class="keys">
+    <button class="key fn clear" data-key="AC" type="button">AC</button>
+    <button class="key fn" data-key="DEL" type="button" aria-label="1文字削除">⌫</button>
+    <button class="key fn" data-key="PAREN" type="button" aria-label="かっこ">( )</button>
+    <button class="key fn" data-key="%" type="button" aria-label="パーセント">%</button>
+
+    <button class="key" data-key="7" type="button">7</button>
+    <button class="key" data-key="8" type="button">8</button>
+    <button class="key" data-key="9" type="button">9</button>
+    <button class="key op" data-key="/" type="button" aria-label="割る">÷</button>
+
+    <button class="key" data-key="4" type="button">4</button>
+    <button class="key" data-key="5" type="button">5</button>
+    <button class="key" data-key="6" type="button">6</button>
+    <button class="key op" data-key="*" type="button" aria-label="かける">×</button>
+
+    <button class="key" data-key="1" type="button">1</button>
+    <button class="key" data-key="2" type="button">2</button>
+    <button class="key" data-key="3" type="button">3</button>
+    <button class="key op" data-key="-" type="button" aria-label="引く">−</button>
+
+    <button class="key fn" data-key="SIGN" type="button" aria-label="符号を反転">±</button>
+    <button class="key" data-key="0" type="button">0</button>
+    <button class="key" data-key="." type="button" aria-label="小数点">.</button>
+    <button class="key op" data-key="+" type="button" aria-label="足す">+</button>
+
+    <button class="key equals" data-key="=" type="button" aria-label="計算する">=</button>
+  </div>
+
+  <section class="history" id="history" aria-label="計算履歴">
+    <div class="history-head">
+      <span>履歴</span>
+      <button class="link-btn" id="history-clear" type="button">消去</button>
+    </div>
+    <ul class="history-list" id="history-list"></ul>
+  </section>
+
+  <p class="hint">キーボード操作可 &nbsp;/&nbsp; Enter = 計算 &nbsp;・&nbsp; Backspace = 削除 &nbsp;・&nbsp; Esc = AC</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var MAX_LENGTH = 80;
+  var OPERATORS = "+-*/";
+  var PRECEDENCE = { "+": 1, "-": 1, "*": 2, "/": 2, "u-": 3, "u+": 3 };
+
+  var exprEl = document.getElementById("expr");
+  var previewEl = document.getElementById("preview");
+  var historyEl = document.getElementById("history");
+  var historyListEl = document.getElementById("history-list");
+
+  var expr = "";
+  var justEvaluated = false;
+  var history = [];
+
+  /* ---------- 数式の解析と計算 ---------- */
+
+  function tokenize(input) {
+    var tokens = [];
+    var i = 0;
+    while (i < input.length) {
+      var c = input[i];
+      if (c === " ") { i++; continue; }
+      if (c >= "0" && c <= "9" || c === ".") {
+        var j = i;
+        var dots = 0;
+        while (j < input.length && (input[j] >= "0" && input[j] <= "9" || input[j] === ".")) {
+          if (input[j] === ".") dots++;
+          j++;
+        }
+        var raw = input.slice(i, j);
+        if (dots > 1 || raw === ".") throw new SyntaxError("数値が不正です");
+        tokens.push({ type: "num", value: parseFloat(raw) });
+        i = j;
+        continue;
+      }
+      if (OPERATORS.indexOf(c) !== -1 || c === "(" || c === ")" || c === "%") {
+        tokens.push({ type: "op", value: c });
+        i++;
+        continue;
+      }
+      throw new SyntaxError("使えない文字です");
+    }
+    return tokens;
+  }
+
+  // 中置記法 -> 逆ポーランド記法（操車場アルゴリズム）
+  function toRPN(tokens) {
+    var output = [];
+    var stack = [];
+    var prev = null;
+
+    for (var i = 0; i < tokens.length; i++) {
+      var token = tokens[i];
+
+      if (token.type === "num") {
+        if (prev && (prev.type === "num" || prev.value === ")" || prev.value === "%")) {
+          throw new SyntaxError("演算子が足りません");
+        }
+        output.push(token);
+        prev = token;
+        continue;
+      }
+
+      var op = token.value;
+
+      if (op === "(") {
+        if (prev && (prev.type === "num" || prev.value === ")" || prev.value === "%")) {
+          throw new SyntaxError("演算子が足りません");
+        }
+        stack.push(op);
+        prev = token;
+        continue;
+      }
+
+      if (op === ")") {
+        if (!prev || prev.value === "(" || (prev.type === "op" && OPERATORS.indexOf(prev.value) !== -1)) {
+          throw new SyntaxError("かっこの中身がありません");
+        }
+        while (stack.length && stack[stack.length - 1] !== "(") output.push({ type: "op", value: stack.pop() });
+        if (!stack.length) throw new SyntaxError("かっこが対応していません");
+        stack.pop();
+        prev = token;
+        continue;
+      }
+
+      // 後置の % （100 で割る）
+      if (op === "%") {
+        if (!prev || !(prev.type === "num" || prev.value === ")" || prev.value === "%")) {
+          throw new SyntaxError("% の位置が不正です");
+        }
+        output.push({ type: "op", value: "%" });
+        prev = token;
+        continue;
+      }
+
+      // 単項の + / -
+      var isUnary = !prev || prev.value === "(" ||
+        (prev.type === "op" && OPERATORS.indexOf(prev.value) !== -1);
+      if (isUnary) {
+        if (op !== "+" && op !== "-") throw new SyntaxError("演算子の位置が不正です");
+        stack.push("u" + op);
+        prev = token;
+        continue;
+      }
+
+      while (stack.length) {
+        var top = stack[stack.length - 1];
+        if (top === "(") break;
+        // 単項演算子は右結合なので、同じ優先度なら積まない
+        var isTopUnary = top.charAt(0) === "u";
+        if (PRECEDENCE[top] > PRECEDENCE[op] || (PRECEDENCE[top] === PRECEDENCE[op] && !isTopUnary)) {
+          output.push({ type: "op", value: stack.pop() });
+        } else break;
+      }
+      stack.push(op);
+      prev = token;
+    }
+
+    if (!prev || (prev.type === "op" && (OPERATORS.indexOf(prev.value) !== -1 || prev.value === "("))) {
+      throw new SyntaxError("式が途中です");
+    }
+
+    while (stack.length) {
+      var last = stack.pop();
+      if (last === "(") throw new SyntaxError("かっこが閉じていません");
+      output.push({ type: "op", value: last });
+    }
+    return output;
+  }
+
+  function evalRPN(rpn) {
+    var stack = [];
+    for (var i = 0; i < rpn.length; i++) {
+      var token = rpn[i];
+      if (token.type === "num") { stack.push(token.value); continue; }
+
+      var op = token.value;
+      if (op === "%") {
+        if (!stack.length) throw new SyntaxError("式が不正です");
+        stack.push(stack.pop() / 100);
+        continue;
+      }
+      if (op === "u-" || op === "u+") {
+        if (!stack.length) throw new SyntaxError("式が不正です");
+        var v = stack.pop();
+        stack.push(op === "u-" ? -v : v);
+        continue;
+      }
+
+      if (stack.length < 2) throw new SyntaxError("式が不正です");
+      var b = stack.pop();
+      var a = stack.pop();
+      if (op === "+") stack.push(a + b);
+      else if (op === "-") stack.push(a - b);
+      else if (op === "*") stack.push(a * b);
+      else if (op === "/") {
+        if (b === 0) throw new RangeError("0 では割れません");
+        stack.push(a / b);
+      } else throw new SyntaxError("式が不正です");
+    }
+    if (stack.length !== 1) throw new SyntaxError("式が不正です");
+    return stack[0];
+  }
+
+  function calculate(input) {
+    var value = evalRPN(toRPN(tokenize(input)));
+    if (!isFinite(value)) throw new RangeError("計算できません");
+    return value;
+  }
+
+  /* ---------- 表示の整形 ---------- */
+
+  function groupDigits(text) {
+    var m = /^(-?)(\d+)(\.\d+)?$/.exec(text);
+    if (!m) return text;
+    return m[1] + m[2].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (m[3] || "");
+  }
+
+  function formatNumber(value) {
+    var abs = Math.abs(value);
+    if (abs !== 0 && (abs >= 1e15 || abs < 1e-9)) {
+      return value.toExponential(8).replace(/\.?0+e/, "e");
+    }
+    // 浮動小数点の誤差（0.1 + 0.2 など）を丸める
+    return groupDigits(String(Number(value.toPrecision(12))));
+  }
+
+  function prettify(input) {
+    return input
+      .replace(/\*/g, " × ")
+      .replace(/\//g, " ÷ ")
+      .replace(/(?<![\d.)%])-/g, "−")
+      .replace(/(?<=[\d.)%])-/g, " − ")
+      .replace(/(?<=[\d.)%])\+/g, " + ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  /* ---------- 入力の組み立て ---------- */
+
+  function lastChar() { return expr.charAt(expr.length - 1); }
+
+  function isOperator(c) { return c !== "" && OPERATORS.indexOf(c) !== -1; }
+
+  function openParenCount(input) {
+    var count = 0;
+    for (var i = 0; i < input.length; i++) {
+      if (input[i] === "(") count++;
+      else if (input[i] === ")") count--;
+    }
+    return count;
+  }
+
+  function currentNumber() {
+    var m = /(\d*\.?\d*)$/.exec(expr);
+    return m ? m[1] : "";
+  }
+
+  function appendDigit(d) {
+    if (justEvaluated) { expr = ""; justEvaluated = false; }
+    if (lastChar() === ")" || lastChar() === "%") expr += "*";
+    var num = currentNumber();
+    if (num === "0") expr = expr.slice(0, -1); // 先頭の 0 を置き換える
+    expr += d;
+  }
+
+  function appendDot() {
+    if (justEvaluated) { expr = ""; justEvaluated = false; }
+    var num = currentNumber();
+    if (num.indexOf(".") !== -1) return;
+    if (num === "") {
+      if (lastChar() === ")" || lastChar() === "%") expr += "*";
+      expr += "0";
+    }
+    expr += ".";
+  }
+
+  function appendOperator(op) {
+    justEvaluated = false;
+    if (expr === "") {
+      if (op === "-") expr = "-";
+      return;
+    }
+    if (isOperator(lastChar())) {
+      // 直前が演算子なら差し替え（"5*-" のような単項マイナスは残す）
+      if (expr.length >= 2 && isOperator(expr.charAt(expr.length - 2)) && lastChar() === "-") {
+        expr = expr.slice(0, -1);
+      }
+      expr = expr.slice(0, -1) + op;
+      return;
+    }
+    if (lastChar() === "(") {
+      if (op === "-") expr += "-";
+      return;
+    }
+    expr += op;
+  }
+
+  function appendParen() {
+    justEvaluated = false;
+    var last = lastChar();
+    var canClose = openParenCount(expr) > 0 &&
+      (/[\d.)%]/.test(last));
+    if (canClose) { expr += ")"; return; }
+    if (/[\d.)%]/.test(last)) expr += "*";
+    expr += "(";
+  }
+
+  function appendPercent() {
+    justEvaluated = false;
+    if (!/[\d.)%]$/.test(expr)) return;
+    expr += "%";
+  }
+
+  function toggleSign() {
+    justEvaluated = false;
+    var m = /(\d*\.?\d+)$/.exec(expr);
+    if (m) {
+      var start = expr.length - m[1].length;
+      var isUnaryMinus = start >= 1 && expr.charAt(start - 1) === "-" &&
+        (start === 1 || /[+\-*/(]/.test(expr.charAt(start - 2)));
+      expr = isUnaryMinus
+        ? expr.slice(0, start - 1) + expr.slice(start)
+        : expr.slice(0, start) + "-" + expr.slice(start);
+      return;
+    }
+    if (lastChar() === "-" && (expr.length === 1 || /[+\-*/(]/.test(expr.charAt(expr.length - 2)))) {
+      expr = expr.slice(0, -1);
+      return;
+    }
+    if (expr === "" || /[+*/(]$/.test(expr)) expr += "-";
+  }
+
+  function backspace() {
+    justEvaluated = false;
+    expr = expr.slice(0, -1);
+  }
+
+  function clearAll() {
+    expr = "";
+    justEvaluated = false;
+  }
+
+  // 途中式でも結果を出せるように、末尾の演算子を落としてかっこを閉じる
+  function completeExpression(input) {
+    var out = input;
+    while (out.length && isOperator(out.charAt(out.length - 1))) out = out.slice(0, -1);
+    if (out.charAt(out.length - 1) === "(") return "";
+    var open = openParenCount(out);
+    for (var i = 0; i < open; i++) out += ")";
+    return out;
+  }
+
+  function equals() {
+    var target = completeExpression(expr);
+    if (target === "") return;
+    try {
+      var value = calculate(target);
+      var formatted = formatNumber(value);
+      pushHistory(prettify(target), formatted);
+      expr = String(Number(value.toPrecision(12)));
+      justEvaluated = true;
+      render(formatted, "result");
+    } catch (err) {
+      render(err.message || "エラー", "error");
+    }
+  }
+
+  /* ---------- 履歴 ---------- */
+
+  function pushHistory(shownExpr, result) {
+    history.unshift({ expr: shownExpr, result: result });
+    if (history.length > 20) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    historyListEl.innerHTML = "";
+    if (!history.length) {
+      var empty = document.createElement("li");
+      empty.className = "empty";
+      empty.textContent = "まだ計算がありません";
+      historyListEl.appendChild(empty);
+      return;
+    }
+    history.forEach(function (item) {
+      var li = document.createElement("li");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "history-item";
+      btn.innerHTML = '<span class="h-expr"></span><span class="h-result"></span>';
+      btn.querySelector(".h-expr").textContent = item.expr + " =";
+      btn.querySelector(".h-result").textContent = item.result;
+      btn.addEventListener("click", function () {
+        expr = item.result.replace(/,/g, "");
+        justEvaluated = true;
+        render();
+      });
+      li.appendChild(btn);
+      historyListEl.appendChild(li);
+    });
+  }
+
+  /* ---------- 描画 ---------- */
+
+  function render(message, kind) {
+    exprEl.textContent = prettify(expr);
+    previewEl.classList.remove("is-result", "is-error");
+
+    if (message) {
+      previewEl.textContent = message;
+      previewEl.classList.add(kind === "error" ? "is-error" : "is-result");
+      return;
+    }
+
+    var target = completeExpression(expr);
+    if (target === "" || justEvaluated) { previewEl.textContent = ""; return; }
+    try {
+      previewEl.textContent = "= " + formatNumber(calculate(target));
+    } catch (err) {
+      previewEl.textContent = "";
+    }
+  }
+
+  /* ---------- 操作の受付 ---------- */
+
+  function press(key) {
+    if (expr.length >= MAX_LENGTH && "0123456789.".indexOf(key) !== -1) return;
+
+    if (key >= "0" && key <= "9") appendDigit(key);
+    else if (key === ".") appendDot();
+    else if (OPERATORS.indexOf(key) !== -1) appendOperator(key);
+    else if (key === "PAREN") appendParen();
+    else if (key === "(" || key === ")") { justEvaluated = false; expr += key; }
+    else if (key === "%") appendPercent();
+    else if (key === "SIGN") toggleSign();
+    else if (key === "DEL") backspace();
+    else if (key === "AC") clearAll();
+    else if (key === "=") { equals(); return; }
+    else return;
+
+    render();
+  }
+
+  document.querySelectorAll(".key").forEach(function (btn) {
+    btn.addEventListener("click", function () { press(btn.dataset.key); });
+  });
+
+  var KEYBOARD_MAP = {
+    Enter: "=", "=": "=", Backspace: "DEL", Delete: "AC", Escape: "AC",
+    c: "AC", C: "AC", ",": ".", n: "SIGN", N: "SIGN"
+  };
+
+  document.addEventListener("keydown", function (event) {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    var key = KEYBOARD_MAP[event.key] || event.key;
+    var known = (key.length === 1 && "0123456789.+-*/()%".indexOf(key) !== -1) ||
+      key === "=" || key === "DEL" || key === "AC" || key === "SIGN";
+    if (!known) return;
+    event.preventDefault();
+    press(key);
+    var btn = document.querySelector('.key[data-key="' + key + '"]');
+    if (btn) {
+      btn.classList.add("is-pressed");
+      setTimeout(function () { btn.classList.remove("is-pressed"); }, 100);
+    }
+  });
+
+  var historyToggle = document.getElementById("history-toggle");
+  historyToggle.addEventListener("click", function () {
+    var open = historyEl.classList.toggle("is-open");
+    historyToggle.setAttribute("aria-pressed", open ? "true" : "false");
+  });
+
+  document.getElementById("history-clear").addEventListener("click", function () {
+    history = [];
+    renderHistory();
+  });
+
+  var themeToggle = document.getElementById("theme-toggle");
+  var storedTheme = null;
+  try { storedTheme = localStorage.getItem("calc-theme"); } catch (e) {}
+  if (storedTheme) document.documentElement.setAttribute("data-theme", storedTheme);
+
+  themeToggle.addEventListener("click", function () {
+    var current = document.documentElement.getAttribute("data-theme");
+    if (!current) {
+      current = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    var next = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("calc-theme", next); } catch (e) {}
+  });
+
+  renderHistory();
+  render();
+})();
+</script>
+</body>
+</html>
