@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>朝の3分ヨガ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<style>
+  /* Layout: one column of numbered steps; each step pairs a "mat" panel figure with its instructions, stacking on phones */
+  :root {
+    --bg: #edf1f0;
+    --surface: #f7faf9;
+    --ink: #1c2a2d;
+    --muted: #56686b;
+    --line: #c9d5d3;
+    --sky: #dbe9ee;
+    --sun: #f1b341;
+    --stretch: #e8792b;
+    --stretch-ink: #a84d0f;
+    --move: #23767d;
+    --seg-alt: #e4ecea;
+    --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+    --font-num: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11181a; --surface: #182225; --ink: #e3ebe9; --muted: #9aaeac; --line: #2b3b3e;
+      --sky: #1d3138; --sun: #f3c25a; --stretch: #f0924a; --stretch-ink: #f6b27a; --move: #63c3c8;
+      --seg-alt: #1f2b2e; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11181a; --surface: #182225; --ink: #e3ebe9; --muted: #9aaeac; --line: #2b3b3e;
+    --sky: #1d3138; --sun: #f3c25a; --stretch: #f0924a; --stretch-ink: #f6b27a; --move: #63c3c8;
+    --seg-alt: #1f2b2e; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 16px/1.8 var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 960px; margin: 0 auto; padding: 36px 20px 56px; }
+
+  /* Header */
+  .eyebrow { margin: 0; font-size: 13px; letter-spacing: .12em; color: var(--muted); font-weight: 500; }
+  h1 {
+    margin: 4px 0 8px;
+    font: 700 clamp(32px, 6vw, 46px)/1.25 var(--font-display);
+    text-wrap: balance;
+  }
+  h1 .num { font-family: var(--font-num); font-weight: 500; color: var(--move); letter-spacing: -.02em; }
+  .lede { margin: 0; max-width: 36em; color: var(--muted); }
+
+  /* Timeline drawn to scale: flex-grow = seconds */
+  .timeline { margin: 28px 0 8px; }
+  .bar { display: flex; gap: 3px; }
+  .seg {
+    flex: var(--s) 1 0;
+    min-width: 0;
+    display: grid;
+    justify-items: center;
+    padding: 8px 2px 7px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: inherit;
+    text-decoration: none;
+    line-height: 1.3;
+  }
+  .seg:first-child { border-radius: 12px 0 0 12px; }
+  .seg:last-child { border-radius: 0 12px 12px 0; }
+  .seg:hover { border-color: var(--move); }
+  .seg:focus-visible { outline: 2px solid var(--move); outline-offset: 2px; }
+  .seg b { font: 700 18px/1.2 var(--font-display); }
+  .seg span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .seg.split { background: linear-gradient(90deg, var(--surface) 50%, var(--seg-alt) 50%); }
+  .ticks { position: relative; height: 22px; margin-top: 4px; font: 500 12px/22px var(--font-num); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ticks span { position: absolute; top: 0; transform: translateX(-50%); }
+  .ticks span:first-child { transform: none; }
+  .ticks span:last-child { transform: translateX(-100%); }
+
+  /* Legend for the figure marks */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+  .legend li { display: flex; align-items: center; gap: 8px; }
+  .legend svg { width: 34px; height: 14px; flex: none; }
+
+  /* Steps */
+  .steps { margin-top: 24px; }
+  .step {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+    padding-block: 28px;
+    border-top: 1px solid var(--line);
+    scroll-margin-top: 16px;
+  }
+  .mat { margin: 0; background: var(--surface); border-radius: 18px; padding: 12px 12px 10px; }
+  .mat svg { display: block; width: 100%; height: auto; color: var(--ink); }
+  .mat figcaption { margin: 6px 4px 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .text { min-width: 0; }
+  .head { display: flex; align-items: baseline; gap: 14px; }
+  .head .n { font: 500 40px/1 var(--font-num); color: var(--move); }
+  h2 { margin: 0; font: 700 24px/1.35 var(--font-display); text-wrap: balance; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 14px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 12px; border: 1px solid var(--line); border-radius: 999px;
+    font-size: 14px; line-height: 1.7;
+  }
+  .pill.time { font-family: var(--font-num); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .pill.target { color: var(--stretch-ink); }
+  .pill.target::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--stretch); }
+  .how { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+  .how li { position: relative; padding-left: 18px; }
+  .how li::before { content: ""; position: absolute; left: 2px; top: .85em; width: 8px; height: 2px; background: var(--move); border-radius: 1px; }
+  .why { margin: 14px 0 0; font-size: 15px; color: var(--muted); }
+  .why strong { color: var(--ink); font-weight: 700; margin-right: .5em; }
+
+  .note { margin: 8px 0 0; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+
+  /* Figure marks */
+  .limb { fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+  .torso { fill: none; stroke: currentColor; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+  .headc { fill: currentColor; }
+  .ghost { opacity: .28; }
+  .glow { fill: none; stroke: var(--stretch); stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; opacity: .45; }
+  .arrow { fill: none; stroke: var(--move); stroke-width: 3; stroke-linecap: round; }
+  .ah { fill: var(--move); }
+  .leader { fill: none; stroke: var(--stretch-ink); stroke-width: 1.5; }
+  .floor { stroke: var(--line); stroke-width: 2; }
+  .window { fill: var(--sky); stroke: var(--muted); stroke-width: 3; }
+  .frame { fill: none; stroke: var(--muted); stroke-width: 3; }
+  .sill { stroke: var(--muted); stroke-width: 5; stroke-linecap: round; }
+  .sun { fill: var(--sun); }
+  .beam { fill: var(--sun); opacity: .2; }
+  .mat svg text { font-family: var(--font-body); font-size: 12px; font-weight: 700; }
+  .t-move { fill: var(--move); }
+  .t-stretch { fill: var(--stretch-ink); }
+  .t-muted { fill: var(--muted); font-weight: 500; }
+
+  @media (max-width: 720px) {
+    .page { padding-block: 24px 40px; padding-inline: 16px; }
+    .step { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-block: 24px; }
+    .head .n { font-size: 34px; }
+    h2 { font-size: 22px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header>
+    <p class="eyebrow">朝のストレッチ・5ポーズ</p>
+    <h1>朝の<span class="num">3</span>分ヨガ</h1>
+    <p class="lede">窓辺で体を起こしてから、背骨、脚の裏、股関節、肩の順にほどいていきます。座りっぱなし、運転、ボルダリング、山歩きで固まりやすいところを、合計180秒で一巡します。</p>
+
+    <nav class="timeline" aria-label="時間の配分（合計3分）">
+      <div class="bar">
+        <a class="seg" href="#p1" style="--s:30"><b>1</b><span>30秒</span></a>
+        <a class="seg" href="#p2" style="--s:40"><b>2</b><span>40秒</span></a>
+        <a class="seg" href="#p3" style="--s:40"><b>3</b><span>40秒</span></a>
+        <a class="seg split" href="#p4" style="--s:40"><b>4</b><span>左右20秒</span></a>
+        <a class="seg" href="#p5" style="--s:30"><b>5</b><span>30秒</span></a>
+      </div>
+      <div class="ticks" aria-hidden="true">
+        <span style="left:0%">0:00</span>
+        <span style="left:16.667%">0:30</span>
+        <span style="left:38.889%">1:10</span>
+        <span style="left:61.111%">1:50</span>
+        <span style="left:83.333%">2:30</span>
+        <span style="left:100%">3:00</span>
+      </div>
+    </nav>
+
+    <ul class="legend" aria-label="図の見かた">
+      <li><svg viewBox="0 0 34 14" aria-hidden="true"><line class="glow" x1="9" y1="7" x2="25" y2="7" style="stroke-width:12"/></svg>のびるところ</li>
+      <li><svg viewBox="0 0 34 14" aria-hidden="true"><defs><marker id="ahL" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs><line class="arrow" x1="3" y1="7" x2="24" y2="7" marker-end="url(#ahL)"/></svg>動かす向き</li>
+    </ul>
+  </header>
+
+  <div class="steps">
+
+    <!-- 1. 窓辺で伸び＋深呼吸 -->
+    <section class="step" id="p1">
+      <figure class="mat">
+        <svg viewBox="0 0 320 200" role="img" aria-label="窓のそばに立ち、両手をまっすぐ上に伸ばした姿勢。わき腹と背骨がのびる。">
+          <defs><marker id="ah1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+          <polygon class="beam" points="120,34 120,148 266,188 186,188"/>
+          <rect class="window" x="28" y="26" width="92" height="124" rx="3"/>
+          <circle class="sun" cx="51" cy="54" r="11"/>
+          <path class="frame" d="M74 26V150M28 88H120"/>
+          <line class="sill" x1="20" y1="153" x2="128" y2="153"/>
+          <line class="floor" x1="12" y1="188" x2="308" y2="188"/>
+          <polyline class="glow" points="200,122 194,86 185,34"/>
+          <polyline class="glow" points="210,122 216,86 225,34"/>
+          <polyline class="limb" points="196,184 205,128 214,184"/>
+          <line class="torso" x1="205" y1="128" x2="205" y2="80"/>
+          <polyline class="limb" points="182,22 194,84 216,84 228,22"/>
+          <circle class="headc" cx="205" cy="66" r="9"/>
+          <line class="arrow" x1="205" y1="46" x2="205" y2="16" marker-end="url(#ah1)"/>
+          <text class="t-move" x="238" y="26">上へのびる</text>
+          <text class="t-stretch" x="236" y="112">わき腹・背骨</text>
+        </svg>
+        <figcaption>窓のそばに立って、両手をまっすぐ上へ。</figcaption>
+      </figure>
+      <div class="text">
+        <div class="head"><span class="n">1</span><h2>窓辺で伸び＋深呼吸</h2></div>
+        <div class="meta">
+          <span class="pill time">30秒</span>
+          <span class="pill target">わき腹・背骨</span>
+        </div>
+        <ul class="how">
+          <li>窓の近くに立ち、両手を上に伸ばす</li>
+          <li>ゆっくり5呼吸（1呼吸およそ6秒）</li>
+        </ul>
+        <p class="why"><strong>ねらい</strong>朝の光も一緒に浴びられます。</p>
+      </div>
+    </section>
+
+    <!-- 2. キャット＆カウ -->
+    <section class="step" id="p2">
+      <figure class="mat">
+        <svg viewBox="0 0 320 200" role="img" aria-label="四つ這いの姿勢を横から見た図。左は息を吐いて背中を丸めたキャット、右は息を吸って背中を反らしたカウ。">
+          <defs><marker id="ah2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+          <line class="floor" x1="10" y1="170" x2="310" y2="170"/>
+          <!-- cat: back rounded up -->
+          <path class="glow" d="M48 120Q85 72 122 120"/>
+          <polyline class="limb" points="18,165 48,165 48,120"/>
+          <polyline class="limb" points="122,120 122,165 132,165"/>
+          <path class="torso" d="M48 120Q85 72 122 120L130 131"/>
+          <circle class="headc" cx="135" cy="140" r="9"/>
+          <line class="arrow" x1="85" y1="86" x2="85" y2="56" marker-end="url(#ah2)"/>
+          <text class="t-move" x="85" y="42" text-anchor="middle">吐いて丸める</text>
+          <!-- cow: back arched down -->
+          <path class="glow" d="M210 116Q247 154 284 120"/>
+          <polyline class="limb" points="180,165 210,165 210,116"/>
+          <polyline class="limb" points="284,120 284,165 294,165"/>
+          <path class="torso" d="M210 116Q247 154 284 120L294 106"/>
+          <circle class="headc" cx="300" cy="97" r="9"/>
+          <line class="arrow" x1="247" y1="56" x2="247" y2="122" marker-end="url(#ah2)"/>
+          <text class="t-move" x="247" y="42" text-anchor="middle">吸って反らす</text>
+          <!-- alternate -->
+          <line class="arrow" x1="150" y1="96" x2="174" y2="96" marker-start="url(#ah2)" marker-end="url(#ah2)"/>
+          <text class="t-muted" x="162" y="116" text-anchor="middle" style="font-size:11px">くり返す</text>
+          <text class="t-muted" x="85" y="190" text-anchor="middle">キャット</text>
+          <text class="t-muted" x="247" y="190" text-anchor="middle">カウ</text>
+        </svg>
+        <figcaption>左が背中を丸めたところ、右が反らしたところ。呼吸に合わせて行き来します。</figcaption>
+      </figure>
+      <div class="text">
+        <div class="head"><span class="n">2</span><h2>キャット＆カウ</h2></div>
+        <div class="meta">
+          <span class="pill time">40秒</span>
+          <span class="pill target">背骨</span>
+        </div>
+        <ul class="how">
+          <li>四つ這いになる（手は肩の下、ひざは腰の下）</li>
+          <li>吐きながら背中を丸める</li>
+          <li>吸いながら背中を反らす</li>
+          <li>呼吸に合わせてくり返す</li>
+        </ul>
+        <p class="why"><strong>ねらい</strong>座りっぱなしで固まった背骨をほぐせます。</p>
+      </div>
+    </section>
+
+    <!-- 3. ダウンドッグ -->
+    <section class="step" id="p3">
+      <figure class="mat">
+        <svg viewBox="0 0 320 200" role="img" aria-label="ダウンドッグを横から見た図。お尻を高く上げた逆V字の姿勢で、かかとを床に近づける。ふくらはぎと太ももの裏がのびる。">
+          <defs><marker id="ah3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+          <line class="floor" x1="10" y1="170" x2="310" y2="170"/>
+          <polyline class="limb ghost" points="150,52 116,110 100,150 116,163"/>
+          <line class="glow" x1="146" y1="58" x2="80" y2="152"/>
+          <polyline class="limb" points="150,52 76,158 98,165"/>
+          <line class="torso" x1="150" y1="52" x2="218" y2="118"/>
+          <polyline class="limb" points="218,118 270,163 286,165"/>
+          <line class="torso" x1="218" y1="118" x2="220" y2="129"/>
+          <circle class="headc" cx="221" cy="138" r="9"/>
+          <line class="arrow" x1="150" y1="40" x2="150" y2="14" marker-end="url(#ah3)"/>
+          <text class="t-move" x="162" y="24">お尻を高く</text>
+          <line class="arrow" x1="62" y1="132" x2="62" y2="154" marker-end="url(#ah3)"/>
+          <text class="t-move" x="14" y="124">かかとを床へ</text>
+          <text class="t-stretch" x="134" y="46" text-anchor="end">もも裏・ふくらはぎ</text>
+        </svg>
+        <figcaption>横から見たところ。うすく描いた脚は、片足ずつかかとを下ろすときの曲げているほうの脚。</figcaption>
+      </figure>
+      <div class="text">
+        <div class="head"><span class="n">3</span><h2>ダウンドッグ</h2></div>
+        <div class="meta">
+          <span class="pill time">40秒</span>
+          <span class="pill target">ふくらはぎ・太ももの裏</span>
+        </div>
+        <ul class="how">
+          <li>お尻を高く上げて、体を逆V字にする</li>
+          <li>かかとを片足ずつ床に近づける</li>
+        </ul>
+        <p class="why"><strong>ねらい</strong>ふくらはぎと太ももの裏が伸びて、山の脚になじみます。</p>
+      </div>
+    </section>
+
+    <!-- 4. ローランジ -->
+    <section class="step" id="p4">
+      <figure class="mat">
+        <svg viewBox="0 0 320 200" role="img" aria-label="ローランジを横から見た図。右脚を前に出して腰を落とし、後ろ脚のひざを床につける。後ろ脚の付け根の前側がのびる。">
+          <defs><marker id="ah4" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+          <line class="floor" x1="10" y1="170" x2="310" y2="170"/>
+          <line class="glow" x1="144" y1="126" x2="106" y2="158"/>
+          <polyline class="limb" points="48,165 98,165 146,124"/>
+          <polyline class="limb" points="146,124 206,112 214,163 236,165"/>
+          <line class="torso" x1="146" y1="124" x2="150" y2="72"/>
+          <polyline class="limb" points="150,76 170,100 196,108"/>
+          <circle class="headc" cx="153" cy="55" r="10"/>
+          <line class="arrow" x1="110" y1="84" x2="134" y2="112" marker-end="url(#ah4)"/>
+          <text class="t-move" x="84" y="74" text-anchor="middle">腰を落とす</text>
+          <line class="leader" x1="88" y1="125" x2="110" y2="141"/>
+          <text class="t-stretch" x="22" y="120">股関節の前側</text>
+          <text class="t-muted" x="226" y="104">前の脚</text>
+          <text class="t-muted" x="40" y="190">後ろの脚</text>
+        </svg>
+        <figcaption>右脚が前の場合。20秒たったら脚を入れかえます。</figcaption>
+      </figure>
+      <div class="text">
+        <div class="head"><span class="n">4</span><h2>ローランジ</h2></div>
+        <div class="meta">
+          <span class="pill time">左右20秒ずつ</span>
+          <span class="pill target">股関節の前側</span>
+        </div>
+        <ul class="how">
+          <li>片足を前に出して腰を落とす</li>
+          <li>後ろ脚の付け根を伸ばす</li>
+          <li>20秒で反対の脚に入れかえる</li>
+        </ul>
+        <p class="why"><strong>ねらい</strong>運転で縮みやすい股関節の前側に効きます。</p>
+      </div>
+    </section>
+
+    <!-- 5. 胸を開く -->
+    <section class="step" id="p5">
+      <figure class="mat">
+        <svg viewBox="0 0 320 200" role="img" aria-label="立って手を背中で組み、胸を張った姿勢を横から見た図。胸と肩の前がのびる。">
+          <defs><marker id="ah5" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+          <line class="floor" x1="10" y1="184" x2="310" y2="184"/>
+          <path class="glow" d="M164 80Q171 95 162 110" style="stroke-width:14"/>
+          <polyline class="limb" points="150,116 144,178 162,180"/>
+          <polyline class="limb" points="150,116 154,178 172,180"/>
+          <line class="torso" x1="150" y1="116" x2="157" y2="76"/>
+          <polyline class="limb" points="156,80 140,108 127,134"/>
+          <circle class="headc" cx="124" cy="138" r="5.5"/>
+          <circle class="headc" cx="163" cy="58" r="10"/>
+          <line class="arrow" x1="176" y1="94" x2="204" y2="87" marker-end="url(#ah5)"/>
+          <text class="t-move" x="212" y="91">胸を張る</text>
+          <line class="arrow" x1="118" y1="146" x2="102" y2="162" marker-end="url(#ah5)"/>
+          <text class="t-move" x="22" y="150">手を後ろ下へ</text>
+          <text class="t-stretch" x="184" y="126">胸・肩の前</text>
+        </svg>
+        <figcaption>手を背中で組んだ形。肩を大きく後ろに回す方法でもかまいません。</figcaption>
+      </figure>
+      <div class="text">
+        <div class="head"><span class="n">5</span><h2>胸を開く</h2></div>
+        <div class="meta">
+          <span class="pill time">30秒</span>
+          <span class="pill target">胸・肩</span>
+        </div>
+        <ul class="how">
+          <li>手を背中で組んで胸を張る</li>
+          <li>または、肩を大きく後ろに回す</li>
+        </ul>
+        <p class="why"><strong>ねらい</strong>ボルダリングや運転で前に入りがちな肩を戻せます。</p>
+      </div>
+    </section>
+
+  </div>
+
+  <p class="note">痛みやしびれが出たら、その動きはやめて楽な姿勢に戻ってください。</p>
+</main>
+</body>
+</html>
