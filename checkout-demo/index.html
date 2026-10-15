@@ -38,7 +38,7 @@
 </head>
 <body>
 <main id="main">
-  <div class="demo">これはデモの決済ページです（架空のお店）。カード情報は入力せず、お金も動きません。本番では、ここがお店の決済ページ（例：Stripe）になります。</div>
+  <div class="demo" id="banner">これはデモの決済ページです（架空のお店）。カード情報は入力せず、お金も動きません。本番では、ここがお店の決済ページ（例：Stripe）になります。</div>
   <div id="root"></div>
 </main>
 <script>
@@ -57,18 +57,42 @@
     return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))));
   }
 
+  const params = new URLSearchParams(location.search);
   let order = null;
   try {
-    const d = new URLSearchParams(location.search).get("d");
+    const d = params.get("d");
     if (d) order = decode(d);
   } catch (e) { order = null; }
 
-  if (!order || !order.id || !Array.isArray(order.lines)) {
+  // Stripe の決済ページから戻ってきたとき（?stripe=done / cancel&order=受付番号）。
+  //   ⚠ このページは支払いを確かめられない（秘密鍵を持たない）＝確かめるのはチャットの［支払いを確認］
+  const back = params.get("stripe");
+  const backId = /^C-[0-9A-F]{8}$/.test(params.get("order") || "") ? params.get("order") : "";
+  if (back === "done" || back === "cancel") {
+    document.title = back === "done" ? "お手続きが終わりました" : "お支払いは済んでいません";
+    document.getElementById("banner").textContent = "架空のお店のデモです。Stripe のテストモードなら、お金は動いていません。";
+    const steps = el("ol", null,
+      el("li", back === "done" ? "done" : "now", back === "done" ? "カードの枠を仮押さえする（お手続きが終わりました）" : "カードの枠を仮押さえする（まだです）"),
+      el("li", back === "done" ? "now" : null, "お店が採寸内容を確かめる（仮押さえの期限内に）"),
+      el("li", null, "確定したら請求／合わなければ取り消し（請求されません）"),
+    );
+    root.append(
+      el("h1", null, back === "done" ? "お手続きが終わりました" : "お支払いは済んでいません"),
+      el("div", "card",
+        backId ? el("div", "id", "受付番号 " + backId) : null,
+        el("p", null, back === "done"
+          ? "チャットに戻って、確認フォームの［支払いを確認］を押すか、Claude に「支払いを確認して」と伝えてください。仮押さえ済みかどうかと、期限が出ます。"
+          : "請求はありません。チャットに戻って、確認フォームの［お店のサイトで支払う］をもう一度押すと、続きからお手続きできます。"),
+      ),
+      el("div", "card", el("h2", null, "お支払いの流れ（仮押さえ）"), steps),
+      el("p", "small", "このページは閉じてかまいません。"),
+    );
+  } else if (!order || !order.id || !Array.isArray(order.lines)) {
     root.append(el("div", "err", "注文の内容を読み取れませんでした。チャットの確認フォームから、もう一度［お店のサイトで支払う］を押してください。"));
   } else {
     const steps = el("ol", null,
       el("li", "now", "カードの枠を仮押さえする（いま・まだ請求されません）"),
-      el("li", null, "お店が採寸内容を確かめる（仮押さえはおよそ7日で切れるので、その間に）"),
+      el("li", null, "お店が採寸内容を確かめる（仮押さえの期限内に。期限はカードによって違います）"),
       el("li", null, "確定したら請求／合わなければ取り消し（請求されません）"),
     );
     const btn = el("button", null, "仮押さえする（デモ）");
